@@ -9,6 +9,12 @@ class ReportController extends Controller
     public function weekly()
     {
         $nurseProfile = auth()->user()->nurseProfile;
+
+        if (!$nurseProfile) {
+            return redirect()->route('profile.index')
+                ->with('error', 'Your nurse profile is missing. Please complete profile setup.');
+        }
+
         $weekStart = now()->startOfWeek()->toDateString();
         $weekEnd = now()->endOfWeek()->toDateString();
 
@@ -34,7 +40,7 @@ class ReportController extends Controller
             LEFT JOIN leave_types lt ON lt.id = se.leave_type_id
             WHERE se.nurse_profile_id = ?
               AND DATE(se.start_datetime) >= ?
-              AND DATE(se.end_datetime) <= ?
+              AND DATE(se.start_datetime) <= ?
         ", [$nurseProfile->id, $weekStart, $weekEnd]);
 
         return view('reports.weekly', [

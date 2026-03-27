@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use App\Models\NurseProfile;
 
 class AuthController extends Controller
 {
@@ -56,48 +57,62 @@ class AuthController extends Controller
     }
 
     public function register(Request $request)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'confirmed', 'min:6'],
+{
+    $data = $request->validate([
+        'name' => ['required', 'string', 'max:150'],
+        'email' => ['required', 'email', 'max:150', 'unique:users,email'],
+        'phone' => ['nullable', 'string', 'max:30'],
+        'password' => ['required', 'confirmed', 'min:6'],
+    ]);
+
+    $user = null;
+    $otpCode = null;
+
+    DB::transaction(function () use ($data, &$user, &$otpCode) {
+        $user = User::create([
+            'role' => 'nurse',
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'password' => Hash::make($data['password']),
+            'is_active' => 1,
+            'email_verified_at' => null,
         ]);
 
-        $user = null;
+        NurseProfile::create([
+            'user_id' => $user->id,
+            'employee_code' => 'NURSE-' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
+            'department' => null,
+            'designation' => 'Staff Nurse',
+            'gender' => null,
+            'join_date' => now()->toDateString(),
+            'status' => 'active',
+            'address' => null,
+            'emergency_contact_name' => null,
+            'emergency_contact_phone' => null,
+        ]);
 
-        DB::transaction(function () use ($data, &$user) {
-            $user = User::create([
-                'role' => 'nurse',
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'phone' => $data['phone'] ?? null,
-                'password' => Hash::make($data['password']),
-                'is_active' => 1,
-                'email_verified_at' => null,
-            ]);
+        OtpVerification::where('user_id', $user->id)
+            ->where('purpose', 'register')
+            ->delete();
 
-            OtpVerification::where('user_id', $user->id)
-                ->where('purpose', 'register')
-                ->delete();
+        $otpCode = (string) random_int(100000, 999999);
 
-            $otpCode = (string) random_int(100000, 999999);
+        OtpVerification::create([
+            'user_id' => $user->id,
+            'otp_code' => $otpCode,
+            'purpose' => 'register',
+            'expires_at' => now()->addMinutes(10),
+        ]);
+    });
 
-            OtpVerification::create([
-                'user_id' => $user->id,
-                'otp_code' => $otpCode,
-                'purpose' => 'register',
-                'expires_at' => now()->addMinutes(10),
-            ]);
+    $user->notify(new SendOtpNotification($otpCode));
 
-            $user->notify(new SendOtpNotification($otpCode));
-        });
+    session(['otp_user_id' => $user->id]);
 
-        session(['otp_user_id' => $user->id]);
-
-        return redirect()->route('verify.otp')
-            ->with('success', 'Account created. OTP has been sent to your email.');
-    }
+    return redirect()->route('verify.otp')
+        ->with('success', 'Account created. OTP has been sent to your email.');
+}
 
     public function showForgotPassword()
     {

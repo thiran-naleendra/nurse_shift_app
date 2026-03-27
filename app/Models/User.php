@@ -32,8 +32,8 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-    public function nurseProfile(): HasOne
-    {
-        return $this->hasOne(NurseProfile::class, 'user_id');
-    }
+    public function nurseProfile()
+{
+    return $this->hasOne(\App\Models\NurseProfile::class, 'user_id');
+}
 }
