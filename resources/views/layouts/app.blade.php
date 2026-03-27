@@ -175,9 +175,9 @@
 
    <footer class="border-t border-slate-200 bg-white py-4">
         <div class="mx-auto max-w-7xl px-4 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
-            © {{ date('Y') }} Nurse Shift App · Developed by
+            漏 {{ date('Y') }} Nurse Shift App 路 Developed by
             <span class="font-semibold text-slate-700">Thiran Naleendra</span>
-            · Developer & Owner
+            路 Developer & Owner
         </div>
     </footer>
 
