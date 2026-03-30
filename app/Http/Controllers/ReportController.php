@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\ScheduleEntry;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
@@ -12,41 +14,76 @@ class ReportController extends Controller
 
         if (!$nurseProfile) {
             return redirect()->route('profile.index')
-                ->with('error', 'Your nurse profile is missing. Please complete profile setup.');
+                ->with('error', 'Your nurse profile is missing.');
         }
 
-        $weekStart = now()->startOfWeek()->toDateString();
-        $weekEnd = now()->endOfWeek()->toDateString();
+        $weekStart = now()->startOfWeek()->format('d M Y');
+        $weekEnd = now()->endOfWeek()->format('d M Y');
 
-        $report = DB::select("
-            SELECT
-                SUM(CASE WHEN st.code = 'FD' THEN 1 ELSE 0 END) AS full_day_count,
-                SUM(CASE WHEN st.code = 'EV' THEN 1 ELSE 0 END) AS evening_count,
-                SUM(CASE WHEN st.code = 'NG' THEN 1 ELSE 0 END) AS night_count,
-                SUM(CASE WHEN lt.code = 'SD' THEN 1 ELSE 0 END) AS sleeping_day_count,
-                SUM(CASE WHEN lt.code = 'CL' THEN 1 ELSE 0 END) AS casual_leave_count,
-                SUM(CASE WHEN lt.code = 'VL' THEN 1 ELSE 0 END) AS vacation_leave_count,
-                SUM(CASE WHEN lt.code = 'DO' THEN 1 ELSE 0 END) AS day_off_count,
-                SUM(CASE WHEN lt.code = 'PH' THEN 1 ELSE 0 END) AS ph_count,
-                SUM(
-                    CASE
-                        WHEN se.entry_type = 'shift'
-                        THEN TIMESTAMPDIFF(MINUTE, se.start_datetime, se.end_datetime) / 60
-                        ELSE 0
-                    END
-                ) AS total_hours
-            FROM schedule_entries se
-            LEFT JOIN shift_types st ON st.id = se.shift_type_id
-            LEFT JOIN leave_types lt ON lt.id = se.leave_type_id
-            WHERE se.nurse_profile_id = ?
-              AND DATE(se.start_datetime) >= ?
-              AND DATE(se.start_datetime) <= ?
-        ", [$nurseProfile->id, $weekStart, $weekEnd]);
+        $startOfWeek = now()->startOfWeek();
+        $endOfWeek = now()->endOfWeek();
 
-        return view('reports.weekly', [
-            'report' => $report[0] ?? null,
-            'weekStart' => $weekStart,
-            'weekEnd' => $weekEnd,
-        ]);
+        $entries = ScheduleEntry::with(['shiftType', 'leaveType'])
+            ->where('nurse_profile_id', $nurseProfile->id)
+            ->where(function ($query) use ($startOfWeek, $endOfWeek) {
+                $query->whereBetween('start_datetime', [$startOfWeek, $endOfWeek])
+                      ->orWhereBetween('end_datetime', [$startOfWeek, $endOfWeek]);
+            })
+            ->get();
+
+        $report = (object) [
+            'full_day_count' => 0,
+            'evening_count' => 0,
+            'night_count' => 0,
+            'morning_night_count' => 0,
+            'evening_night_count' => 0,
+            'sleeping_day_count' => 0,
+            'casual_leave_count' => 0,
+            'vacation_leave_count' => 0,
+            'day_off_count' => 0,
+            'ph_count' => 0,
+            'total_hours' => 0,
+        ];
+
+        foreach ($entries as $entry) {
+            if ($entry->entry_type === 'shift') {
+                $code = $entry->shiftType?->code;
+
+                if ($code === 'FD') {
+                    $report->full_day_count++;
+                } elseif ($code === 'EV') {
+                    $report->evening_count++;
+                } elseif ($code === 'NG') {
+                    $report->night_count++;
+                } elseif ($code === 'MN') {
+                    $report->morning_night_count++;
+                } elseif ($code === 'EN') {
+                    $report->evening_night_count++;
+                }
+
+                $hours = Carbon::parse($entry->start_datetime)
+                    ->diffInMinutes(Carbon::parse($entry->end_datetime)) / 60;
+
+                $report->total_hours = round($report->total_hours + $hours, 1);
+            }
+
+            if ($entry->entry_type === 'leave') {
+                $code = $entry->leaveType?->code;
+
+                if ($code === 'SD') {
+                    $report->sleeping_day_count++;
+                } elseif ($code === 'CL') {
+                    $report->casual_leave_count++;
+                } elseif ($code === 'VL') {
+                    $report->vacation_leave_count++;
+                } elseif ($code === 'DO') {
+                    $report->day_off_count++;
+                } elseif ($code === 'PH') {
+                    $report->ph_count++;
+                }
+            }
+        }
+
+        return view('reports.weekly', compact('report', 'weekStart', 'weekEnd'));
     }
 }

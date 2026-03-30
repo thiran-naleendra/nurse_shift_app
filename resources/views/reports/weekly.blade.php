@@ -9,7 +9,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <div class="rounded-3xl bg-white p-6 shadow-sm">
             <p class="text-sm font-medium text-slate-500">Full Day</p>
             <h2 class="mt-3 text-3xl font-bold text-blue-600">{{ $report->full_day_count ?? 0 }}</h2>
@@ -26,10 +26,22 @@
         </div>
 
         <div class="rounded-3xl bg-white p-6 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">Morning + Night</p>
+            <h2 class="mt-3 text-3xl font-bold text-cyan-600">{{ $report->morning_night_count ?? 0 }}</h2>
+        </div>
+
+        <div class="rounded-3xl bg-white p-6 shadow-sm">
+            <p class="text-sm font-medium text-slate-500">Evening + Night</p>
+            <h2 class="mt-3 text-3xl font-bold text-fuchsia-600">{{ $report->evening_night_count ?? 0 }}</h2>
+        </div>
+
+        <div class="rounded-3xl bg-white p-6 shadow-sm">
             <p class="text-sm font-medium text-slate-500">Total Hours</p>
             <h2 class="mt-3 text-3xl font-bold text-slate-900">{{ $report->total_hours ?? 0 }}</h2>
         </div>
+    </div>
 
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div class="rounded-3xl bg-white p-6 shadow-sm">
             <p class="text-sm font-medium text-slate-500">Total Leave</p>
             <h2 class="mt-3 text-3xl font-bold text-green-600">

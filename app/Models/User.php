@@ -33,7 +33,7 @@ class User extends Authenticatable
     ];
 
     public function nurseProfile()
-{
-    return $this->hasOne(\App\Models\NurseProfile::class, 'user_id');
-}
+    {
+        return $this->hasOne(\App\Models\NurseProfile::class, 'user_id');
+    }
 }

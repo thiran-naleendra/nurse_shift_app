@@ -9,7 +9,7 @@
         </div>
 
         <a href="{{ route('schedules.index') }}"
-           class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
             Back
         </a>
     </div>
@@ -33,11 +33,11 @@
                     class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                     <option value="">Select Shift</option>
                     @foreach($shiftTypes as $shift)
-                        <option value="{{ $shift->id }}"
-                                data-code="{{ $shift->code }}"
-                                {{ old('shift_type_id') == $shift->id ? 'selected' : '' }}>
-                            {{ $shift->name }}
-                        </option>
+                    <option value="{{ $shift->id }}"
+                        data-code="{{ $shift->code }}"
+                        {{ old('shift_type_id') == $shift->id ? 'selected' : '' }}>
+                        {{ $shift->name }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -48,9 +48,9 @@
                     class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                     <option value="">Select Leave</option>
                     @foreach($leaveTypes as $leave)
-                        <option value="{{ $leave->id }}" {{ old('leave_type_id') == $leave->id ? 'selected' : '' }}>
-                            {{ $leave->name }}
-                        </option>
+                    <option value="{{ $leave->id }}" {{ old('leave_type_id') == $leave->id ? 'selected' : '' }}>
+                        {{ $leave->name }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -58,19 +58,19 @@
             <div id="shift_date_box">
                 <label class="mb-2 block text-sm font-medium text-slate-700">Shift Date</label>
                 <input type="date"
-                       id="shift_date"
-                       name="shift_date"
-                       value="{{ old('shift_date') }}"
-                       class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                    id="shift_date"
+                    name="shift_date"
+                    value="{{ old('shift_date') }}"
+                    class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
             </div>
 
             <div id="leave_date_box">
                 <label class="mb-2 block text-sm font-medium text-slate-700">Leave Date</label>
                 <input type="date"
-                       id="leave_date"
-                       name="leave_date"
-                       value="{{ old('leave_date') }}"
-                       class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                    id="leave_date"
+                    name="leave_date"
+                    value="{{ old('leave_date') }}"
+                    class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
             </div>
 
             <div class="md:col-span-2 rounded-2xl bg-slate-50 p-4">
@@ -119,15 +119,23 @@
         const end = new Date(shiftDate + 'T00:00:00');
 
         if (code === 'FD') {
-            start.setHours(7, 0, 0, 0);
-            end.setHours(19, 0, 0, 0);
+            start.setHours(7, 0);
+            end.setHours(19, 0);
         } else if (code === 'EV') {
-            start.setHours(13, 0, 0, 0);
-            end.setHours(19, 0, 0, 0);
+            start.setHours(13, 0);
+            end.setHours(19, 0);
         } else if (code === 'NG') {
-            start.setHours(19, 0, 0, 0);
+            start.setHours(19, 0);
             end.setDate(end.getDate() + 1);
-            end.setHours(7, 0, 0, 0);
+            end.setHours(7, 0);
+        } else if (code === 'MN') {
+            start.setHours(7, 0);
+            end.setDate(end.getDate() + 1);
+            end.setHours(7, 0);
+        } else if (code === 'EN') {
+            start.setHours(13, 0);
+            end.setDate(end.getDate() + 1);
+            end.setHours(7, 0);
         }
 
         document.getElementById('preview_text').innerText =
@@ -173,7 +181,7 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         toggleEntryTypeFields();
 
         document.getElementById('entry_type').addEventListener('change', toggleEntryTypeFields);

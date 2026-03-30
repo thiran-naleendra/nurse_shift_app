@@ -37,4 +37,7 @@ class NurseProfile extends Model
     {
         return $this->hasMany(WeeklyReport::class, 'nurse_profile_id');
     }
+    
+
+    
 }

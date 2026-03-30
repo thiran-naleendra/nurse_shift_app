@@ -90,7 +90,7 @@ class ScheduleController extends Controller
         $overlap = ScheduleEntry::where('nurse_profile_id', $nurseProfile->id)
             ->where(function ($query) use ($startDateTime, $endDateTime) {
                 $query->where('start_datetime', '<', $endDateTime->format('Y-m-d H:i:s'))
-                      ->where('end_datetime', '>', $startDateTime->format('Y-m-d H:i:s'));
+                    ->where('end_datetime', '>', $startDateTime->format('Y-m-d H:i:s'));
             })
             ->exists();
 
@@ -190,7 +190,7 @@ class ScheduleController extends Controller
             ->where('id', '!=', $schedule->id)
             ->where(function ($query) use ($startDateTime, $endDateTime) {
                 $query->where('start_datetime', '<', $endDateTime->format('Y-m-d H:i:s'))
-                      ->where('end_datetime', '>', $startDateTime->format('Y-m-d H:i:s'));
+                    ->where('end_datetime', '>', $startDateTime->format('Y-m-d H:i:s'));
             })
             ->exists();
 
@@ -236,17 +236,25 @@ class ScheduleController extends Controller
         $end = $shiftDate->copy();
 
         if ($shiftCode === 'FD') {
-            $start->setTime(7, 0, 0);
-            $end->setTime(19, 0, 0);
+            $start->setTime(7, 0);
+            $end->setTime(19, 0);
         } elseif ($shiftCode === 'EV') {
-            $start->setTime(13, 0, 0);
-            $end->setTime(19, 0, 0);
+            $start->setTime(13, 0);
+            $end->setTime(19, 0);
         } elseif ($shiftCode === 'NG') {
-            $start->setTime(19, 0, 0);
-            $end->addDay()->setTime(7, 0, 0);
+            $start->setTime(19, 0);
+            $end->addDay()->setTime(7, 0);
+        } elseif ($shiftCode === 'MN') {
+            // Morning + Night (24h)
+            $start->setTime(7, 0);
+            $end->addDay()->setTime(7, 0);
+        } elseif ($shiftCode === 'EN') {
+            // Evening + Night
+            $start->setTime(13, 0);
+            $end->addDay()->setTime(7, 0);
         } else {
-            $start->setTime(7, 0, 0);
-            $end->setTime(19, 0, 0);
+            $start->setTime(7, 0);
+            $end->setTime(19, 0);
         }
 
         return [$start, $end];
